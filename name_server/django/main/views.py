@@ -23,6 +23,26 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     queryset = File.objects.all()
 
+    # Redefine create to add storage if file exists
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        file_path = serializer.validated_data['file_path']
+        file_exist = File.objects.filter(file_path=file_path).count() > 0
+        if file_exist:
+            file = File.objects.get(file_path=file_path)
+            file.storage.add(serializer.validated_data['storage'][0])
+        else:
+            self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return response.Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
 
 class StorageViewSet(viewsets.ModelViewSet):
     serializer_class = StorageSerializer

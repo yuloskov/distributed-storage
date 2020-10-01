@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = DefaultRouter()
-router.register(r'file', FileViewSet, basename='files')
-router.register(r'storage', StorageViewSet, basename='storage',)
+router.register(r'file', FileViewSet)
+router.register(r'storage', StorageViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -33,12 +33,12 @@ class APITest(APITestCase):
         Storage.objects.create(ip=self.ip4)
         Storage.objects.create(ip=self.ip5)
 
-        file1 = File.objects.create(file_path='/a/b')
-        file1.storage.add(self.ip1)
-        file1.storage.add(self.ip2)
+        url = '/api/file/'
+        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip1})
+        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip2})
 
-        File.objects.create(file_path='/a/c').storage.add(self.ip1)
-        File.objects.create(file_path='/a/d').storage.add(self.ip2)
+        self.client.post(url, {'file_path': '/a/c', 'storage': self.ip1})
+        self.client.post(url, {'file_path': '/a/d', 'storage': self.ip2})
 
         # TEST /a/b
         response = self.client.get(

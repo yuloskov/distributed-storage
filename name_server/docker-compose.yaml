@@ -2,8 +2,7 @@ version: "3.7"
 
 x-django-common-volumes: &django-common-volumes
   - "sockets:/tmp/sockets"
-  - "django-static:/app/static"
-  - "django-media:/var/data"
+  - "./django:/app"
 
 x-django-common-environment: &django-common-environment
   MODE: "dev"
@@ -17,6 +16,7 @@ x-django-common-environment: &django-common-environment
   DJANGO_DATABASE_PASSWORD: "pgpassword"
   DJANGO_DATABASE_HOST: "postgres"
   DJANGO_DATABASE_PORT: "5432"
+  NUM_OF_REPLICAS: "2"
 
 services:
   nginx:

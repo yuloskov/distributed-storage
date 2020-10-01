@@ -1,23 +1,27 @@
 from django.db import models
 
-import uuid
+STATUS_CHOICES = [
+    ('UP', 'Server is up'),
+    ('DN', 'Server is down'),
+    ('PD', 'Server is doing some task'),
+]
 
 
 class Storage(models.Model):
     ip = models.GenericIPAddressField(
         primary_key=True,
     )
+    status = models.CharField(
+        max_length=4,
+        choices=STATUS_CHOICES,
+        default='UP',
+    )
 
 
 class File(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=True,
+    file_path = models.CharField(
+        max_length=1000,
     )
-    storage = models.ForeignKey(
+    storage = models.ManyToManyField(
         Storage,
-        on_delete=models.SET_NULL,
-        null=True,
-        default=None,
     )

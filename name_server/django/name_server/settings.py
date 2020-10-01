@@ -27,8 +27,10 @@ DEBUG = (os.environ['DJANGO_DEBUG'] == "True")
 
 ALLOWED_HOSTS = list(os.environ['DJANGO_ALLOWED_HOSTS'].split(','))
 
-# Application definition
+# Num of file replications
+NUM_OF_REPLICAS = int(os.environ['NUM_OF_REPLICAS'])
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

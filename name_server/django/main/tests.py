@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Storage, File
+from .models import Storage
 
 
 class APITest(APITestCase):
@@ -10,6 +10,10 @@ class APITest(APITestCase):
     ip3 = '10.21.15.3'
     ip4 = '10.21.15.4'
     ip5 = '10.21.15.5'
+
+    def get_file_id(self, file_path):
+        response = self.client.get(f'/api/file/id/', {'file_path': file_path})
+        return response.data['id']
 
     def test_available(self):
         Storage.objects.create(ip=self.ip1, status='DN')
@@ -41,18 +45,14 @@ class APITest(APITestCase):
         self.client.post(url, {'file_path': '/a/d', 'storage': self.ip2})
 
         # TEST /a/b
-        response = self.client.get(
-            '/api/storage/replicate_ip/',
-            data={'file_path': '/a/b'},
-        )
+        file_id = self.get_file_id('/a/b')
+        response = self.client.get(f'/api/file/{file_id}/replicate_ip/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
         # TEST /a/c
-        response = self.client.get(
-            '/api/storage/replicate_ip/',
-            data={'file_path': '/a/c'},
-        )
+        file_id = self.get_file_id('/a/c')
+        response = self.client.get(f'/api/file/{file_id}/replicate_ip/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             list(map(dict, list(response.data))), [
@@ -64,10 +64,8 @@ class APITest(APITestCase):
         )
 
         # TEST /a/d
-        response = self.client.get(
-            '/api/storage/replicate_ip/',
-            data={'file_path': '/a/d'},
-        )
+        file_id = self.get_file_id('/a/d')
+        response = self.client.get(f'/api/file/{file_id}/replicate_ip/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             list(map(dict, list(response.data))), [
@@ -77,3 +75,21 @@ class APITest(APITestCase):
                 {'ip': self.ip5},
             ],
         )
+
+    def test_delete(self):
+        Storage.objects.create(ip=self.ip1)
+        Storage.objects.create(ip=self.ip2)
+        Storage.objects.create(ip=self.ip3)
+        Storage.objects.create(ip=self.ip4)
+        Storage.objects.create(ip=self.ip5)
+
+        url = '/api/file/'
+        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip1})
+        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip2})
+
+        file_id = self.get_file_id('/a/b')
+        self.client.delete(f'{url}{file_id}/')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.data, [])

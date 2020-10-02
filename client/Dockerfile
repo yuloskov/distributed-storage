@@ -7,10 +7,8 @@ COPY ./requirements.txt .
 
 RUN pip3 install -r requirements.txt
 
-COPY ./main.py .
-COPY ./register.py .
+COPY ./send_file.py .
 
-VOLUME ./save_folder
+CMD sleep 1000
 
-CMD python3 main.py
 

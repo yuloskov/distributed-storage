@@ -9,7 +9,7 @@ x-django-common-environment: &django-common-environment
   DJANGO_DEBUG: "True"
   DJANGO_APP_NAME: "name_server"
   DJANGO_SECRET_KEY: "aaaaaaaaaaaaaaaaaaaaaa"
-  DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+  DJANGO_ALLOWED_HOSTS: "*"
   DJANGO_LOGGING_LEVEL: "INFO"
   DJANGO_DATABASE_NAME: "pgdb"
   DJANGO_DATABASE_USER: "pguser"

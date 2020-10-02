@@ -9,6 +9,6 @@ RUN pip3 install -r requirements.txt
 
 COPY ./send_file.py .
 
-CMD sleep 1000
+CMD sleep 10000
 
 

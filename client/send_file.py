@@ -22,10 +22,7 @@ def send_data_to_server(filepath, ip):
 
 
 def get_server_ip():
-    response = requests.get(f'{name_server_url}api/storage/available')
-    print(response.status_code)
-    print(response.json())
-    print(response.json())
+    response = requests.get(f'{name_server_url}api/storage/available/')
     return response.json()[0]['ip']
 
 

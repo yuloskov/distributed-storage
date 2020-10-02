@@ -103,3 +103,19 @@ class StorageViewSet(viewsets.ModelViewSet):
         available_servers = Storage.objects.filter(status='UP')
         serializer = StorageSerializer(available_servers, many=True)
         return response.Response(serializer.data, status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def id(self, request):
+        """
+        Get the storage id by ip.
+
+        :param request: Request body.
+            Should include parameter ip - the ip of the storage.
+        :return: {'ip': ip_of_the_server}
+        """
+        if 'ip' not in request.GET:
+            raise Http404
+
+        ip = request.GET['ip']
+        storage = Storage.objects.get(ip=ip)
+        return response.Response({'id': storage.id}, status.HTTP_200_OK)

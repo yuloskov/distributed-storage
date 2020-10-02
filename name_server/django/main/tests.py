@@ -11,8 +11,14 @@ class APITest(APITestCase):
     ip4 = '10.21.15.4'
     ip5 = '10.21.15.5'
 
+    url_file = '/api/file/'
+
     def get_file_id(self, file_path):
-        response = self.client.get(f'/api/file/id/', {'file_path': file_path})
+        response = self.client.get('/api/file/id/', {'file_path': file_path})
+        return response.data['id']
+
+    def get_storage_id(self, ip):
+        response = self.client.get('/api/storage/id/', data={'ip': ip})
         return response.data['id']
 
     def test_available(self):
@@ -37,12 +43,24 @@ class APITest(APITestCase):
         Storage.objects.create(ip=self.ip4)
         Storage.objects.create(ip=self.ip5)
 
-        url = '/api/file/'
-        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip1})
-        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip2})
-
-        self.client.post(url, {'file_path': '/a/c', 'storage': self.ip1})
-        self.client.post(url, {'file_path': '/a/d', 'storage': self.ip2})
+        st1_id = self.get_storage_id(self.ip1)
+        st2_id = self.get_storage_id(self.ip2)
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/b', 'storage': st1_id},
+        )
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/b', 'storage': st2_id},
+        )
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/c', 'storage': st1_id},
+        )
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/d', 'storage': st2_id},
+        )
 
         # TEST /a/b
         file_id = self.get_file_id('/a/b')
@@ -83,13 +101,21 @@ class APITest(APITestCase):
         Storage.objects.create(ip=self.ip4)
         Storage.objects.create(ip=self.ip5)
 
-        url = '/api/file/'
-        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip1})
-        self.client.post(url, {'file_path': '/a/b', 'storage': self.ip2})
+        st1_id = self.get_storage_id(self.ip1)
+        st2_id = self.get_storage_id(self.ip2)
+
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/b', 'storage': st1_id},
+        )
+        self.client.post(
+            self.url_file,
+            {'file_path': '/a/b', 'storage': st2_id},
+        )
 
         file_id = self.get_file_id('/a/b')
-        self.client.delete(f'{url}{file_id}/')
+        self.client.delete(f'{self.url_file}{file_id}/')
 
-        response = self.client.get(url)
+        response = self.client.get(self.url_file)
 
         self.assertEqual(response.data, [])

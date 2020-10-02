@@ -12,5 +12,5 @@ COPY ./register.py .
 
 VOLUME ./save_folder
 
-CMD python3 main.py
+CMD python3 -u main.py > flask.log
 

@@ -5,3 +5,4 @@ djangorestframework~=3.11.0
 drf-yasg~=1.17.1
 psycopg2-binary~=2.8.4
 uwsgi~=2.0.18
+requests~=2.24.0

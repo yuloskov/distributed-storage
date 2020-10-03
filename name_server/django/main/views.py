@@ -15,6 +15,7 @@ from .serializers import FileSerializer
 from .serializers import StorageSerializer
 
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,11 @@ class FileViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         servers = instance.storage.all()
         for server in servers:
-            # TODO: send request for delete here
-            logger.info(server.ip)
+            url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
+            requests.post(
+                url,
+                data={'file_path': instance.file_path},
+            )
 
         self.perform_destroy(instance)
         return response.Response(status=status.HTTP_204_NO_CONTENT)

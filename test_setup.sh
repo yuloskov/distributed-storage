@@ -1,8 +1,8 @@
 NAME_SEVER_NETWORK=name_server_default
 
 cd ./name_server
-docker-compose down
-docker-compose up -d --build
+#docker-compose down
+#docker-compose up -d --build
 
 cd ../storage_server
 docker kill storage1

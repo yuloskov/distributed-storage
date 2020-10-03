@@ -17,6 +17,7 @@ x-django-common-environment: &django-common-environment
   DJANGO_DATABASE_HOST: "postgres"
   DJANGO_DATABASE_PORT: "5432"
   NUM_OF_REPLICAS: "2"
+  STORAGE_SERVER_PORT: "5000"
 
 services:
   nginx:

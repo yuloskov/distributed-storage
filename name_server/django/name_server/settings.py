@@ -29,6 +29,7 @@ ALLOWED_HOSTS = list(os.environ['DJANGO_ALLOWED_HOSTS'].split(','))
 
 # Num of file replications
 NUM_OF_REPLICAS = int(os.environ['NUM_OF_REPLICAS'])
+STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 # Application definition
 INSTALLED_APPS = [

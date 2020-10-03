@@ -2,11 +2,8 @@
 
 NAME_SEVER_NETWORK=name_server_default
 
-cd ./name_server
-# docker-compose down
-# docker-compose up -d --build
 
-cd ../storage_server
+cd ./storage_server
 docker kill storage1
 docker rm storage1
 docker build -t storage1 .
@@ -18,6 +15,12 @@ docker rm storage2
 docker build -t storage2 .
 docker run -d --name=storage2 --env-file=.env storage2
 docker network connect ${NAME_SEVER_NETWORK} storage2
+
+docker kill storage3
+docker rm storage3
+docker build -t storage3 .
+docker run -d --name=storage3 --env-file=.env storage3
+docker network connect ${NAME_SEVER_NETWORK} storage3
 
 cd ../client
 docker kill client1

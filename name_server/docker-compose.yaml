@@ -41,6 +41,7 @@ services:
       UWSGI_THREADS: "2"
       UWSGI_HARAKIRI: "60"
       UWSGI_MAX_REQUESTS: "100"
+      STORAGE_SERVER_PORT: "5000"
     depends_on:
       - postgres
     restart: "always"

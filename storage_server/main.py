@@ -22,38 +22,51 @@ def status():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return 400
+    if request.method != 'POST':
+        return
 
-        file = request.files['file']
-        if not file:
-            return 400
+    if 'file' not in request.files:
+        return 400
 
-        if 'file_path' not in request.form:
-            return 400
+    file = request.files['file']
+    if not file:
+        return 400
 
-        file_path = request.form['file_path']
-        print(file_path)
-        save_path = os.path.join(save_folder, file_path)
-        print(save_path)
+    if 'file_path' not in request.form:
+        return 400
 
-        if not os.path.exists(os.path.dirname(save_path)):
-            try:
-                os.makedirs(os.path.dirname(save_path))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
+    file_path = request.form['file_path']
+    print(file_path)
+    save_path = os.path.join(save_folder, file_path)
+    print(save_path)
 
-        file.save(save_path)
-        print('File saved locally')
+    if not os.path.exists(os.path.dirname(save_path)):
+        try:
+            os.makedirs(os.path.dirname(save_path))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
 
-        print('Writing file to db')
-        save_file_to_db(file_path)
-        print('Saved file to db')
+    file.save(save_path)
+    print('File saved locally')
 
-        replicate_file(file_path)
-        return 'File received'
+    print('Writing file to db')
+    save_file_to_db(file_path)
+    print('Saved file to db')
+
+    replicate_file(file_path)
+    return 'File received'
+
+
+@app.route('/replicate', methods=['POST'])
+def replicate():
+    if request.method != 'POST':
+        return
+
+    file_path = request.form.get('file_path')
+    print(file_path)
+    replicate_file(file_path)
+    return 'OK'
 
 
 @app.route('/delete', methods=['POST'])
@@ -114,12 +127,16 @@ def get_replicate_ip(save_path):
     )
     file_id = response.json()['id']
 
-    response = requests.get(f'{file_url}{file_id}/replicate_ip/')
-    return response.json()[0]['ip']
+    response = requests.get(f'{file_url}{file_id}/replicate_ip/').json()
+    if (len(response) == 0):
+        return -1
+    return response[0]['ip']
 
 
 def replicate_file(file_path):
     ip = get_replicate_ip(file_path)
+    if ip == -1:
+        return
     print('replicate ', ip)
     print(file_path)
     save_path = os.path.join(save_folder, file_path)

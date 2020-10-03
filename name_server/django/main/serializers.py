@@ -8,6 +8,7 @@ class StorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Storage
         fields = [
+            'id',
             'ip',
         ]
 
@@ -16,6 +17,7 @@ class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         fields = [
+            'id',
             'file_path',
             'storage',
         ]

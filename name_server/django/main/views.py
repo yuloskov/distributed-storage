@@ -108,6 +108,13 @@ class StorageViewSet(viewsets.ModelViewSet):
         serializer = StorageSerializer(available_servers, many=True)
         return response.Response(serializer.data, status.HTTP_200_OK)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data={'ip': request.META.get('REMOTE_ADDR')})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return response.Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @action(detail=False, methods=['GET'])
     def id(self, request):
         """

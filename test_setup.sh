@@ -26,5 +26,6 @@ cd ../client
 docker kill client1
 docker rm client1
 docker build -t client1 .
-docker run -d --name=client1 --env-file=.env -v $(pwd)/upload_folder:/upload_folder client1
+docker create -it --name=client1 --env-file=.env -v $(pwd)/upload_folder:/upload_folder client1
 docker network connect ${NAME_SEVER_NETWORK} client1
+docker start -ia client1

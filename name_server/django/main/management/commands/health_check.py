@@ -42,11 +42,15 @@ class Command(BaseCommand):
                     if len(file_servers) == 0:
                         logs.write(f'File {f.file_path} lost forever')
                     init_server = file_servers[0]
+                    copy_to = Storage.objects.all().difference(file_servers).first()
                     logs.write(
                         f'Replicatting {f.file_path}. Starting from {init_server.ip}\n')
                     response = requests.post(
                         f'http://{init_server.ip}:{STORAGE_SERVER_PORT}/replicate',
-                        data={'file_path': f.file_path}
+                        data={
+                            'file_path': f.file_path,
+                            'dest_ip': copy_to.ip
+                        }
                     )
 
                 logs.write(f'{s.ip} : FAIL\n')

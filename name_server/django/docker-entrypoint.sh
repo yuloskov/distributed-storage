@@ -30,7 +30,7 @@ echo
 echo "Scheduling..."
 python manage.py health_check --repeat 10 &
 echo "done"
-echo`
+echo
 
 if [ "$1" = 'uwsgi' ]; then
   [[ -S /tmp/sockets/wsgi.sock ]] && rm /tmp/sockets/wsgi.sock

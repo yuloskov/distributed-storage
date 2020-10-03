@@ -12,6 +12,7 @@ import requests
 LOGS_PATH = 'LOGS.txt'
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
+
 class Command(BaseCommand):
     help = 'Start server monitoring'
 
@@ -41,7 +42,8 @@ class Command(BaseCommand):
                     if len(file_servers) == 0:
                         logs.write(f'File {f.file_path} lost forever')
                     init_server = file_servers[0]
-                    logs.write(f'Replicatting {f.file_path}. Starting from {init_server.ip}\n')
+                    logs.write(
+                        f'Replicatting {f.file_path}. Starting from {init_server.ip}\n')
                     response = requests.post(
                         f'http://{init_server.ip}:{STORAGE_SERVER_PORT}/replicate',
                         data={'file_path': f.file_path}
@@ -53,7 +55,9 @@ class Command(BaseCommand):
         logs.close()
 
     def handle(self, *args, **options):
-        os.remove(LOGS_PATH)
+        if os.path.exists(LOGS_PATH):
+            os.remove(LOGS_PATH)
+
         print('Start monitoring')
         repeat = options['repeat']
         while True:

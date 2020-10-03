@@ -30,6 +30,7 @@ yarn-error.log*
 
 client/upload_folder
 storage_server/save_folder
+name_server/django/LOGS.txt
 
 # Editor directories and files
 .idea

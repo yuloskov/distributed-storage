@@ -3,6 +3,7 @@
 import argparse
 import os
 import shutil
+from .api import upload_file, delete_file
 
 parser = argparse.ArgumentParser(description='CLI for distributed file system')
 subparsers = parser.add_subparsers(title='command', dest='command', help='Command to interact with')

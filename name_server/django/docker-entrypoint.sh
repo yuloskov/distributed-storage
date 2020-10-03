@@ -26,6 +26,11 @@ python manage.py collectstatic --no-input
 echo "done"
 echo
 
+echo "Scheduling..."
+python manage.py health_check &
+echo "done"
+echo
+
 if [ "$1" = 'uwsgi' ]; then
   [[ -S /tmp/sockets/wsgi.sock ]] && rm /tmp/sockets/wsgi.sock
   exec $@ \

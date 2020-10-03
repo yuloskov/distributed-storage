@@ -83,6 +83,7 @@ def get_replicate_ip(save_path):
     )
     file_id = response.json()['id']
     print(file_id)
+
     response = requests.get(f'{file_url}{file_id}/replicate_ip/')
     print(response.json())
     return response.json()[0]['ip']

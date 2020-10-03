@@ -8,9 +8,11 @@ STATUS_CHOICES = [
 
 
 class Storage(models.Model):
-    ip = models.GenericIPAddressField()
+    ip = models.GenericIPAddressField(
+        unique=True
+    )
     status = models.CharField(
-        max_length=4,
+        max_length=2,
         choices=STATUS_CHOICES,
         default='UP',
     )

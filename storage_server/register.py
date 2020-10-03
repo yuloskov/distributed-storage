@@ -2,9 +2,6 @@ import os
 import requests
 import subprocess
 
-ip = os.environ['NAME_SERVER_IP']
-port = os.environ['NAME_SERVER_PORT']
-
 
 def register():
     # TODO change for machine ip
@@ -14,6 +11,9 @@ def register():
         stdout=subprocess.PIPE,
     )
     container_ip = result.stdout.decode('utf-8').strip()
+    print(container_ip)
+    print(ip)
+    print(port)
 
     response = requests.post(
         f'http://{ip}:{port}/api/storage/',
@@ -23,4 +23,7 @@ def register():
 
 
 if __name__ == '__main__':
+    print(os.environ)
+    ip = os.environ['NAME_SERVER_IP']
+    port = os.environ['NAME_SERVER_PORT']
     register()

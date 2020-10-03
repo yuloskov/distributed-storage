@@ -21,6 +21,10 @@ class Storage(models.Model):
 class File(models.Model):
     file_path = models.CharField(
         max_length=1000,
+        unique=True,
+    )
+    hash = models.CharField(
+        max_length=32,
     )
     storage = models.ManyToManyField(
         Storage,

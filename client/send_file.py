@@ -4,17 +4,18 @@ import requests
 
 name_server_ip = os.environ['NAME_SERVER_IP']
 name_server_port = os.environ['NAME_SERVER_PORT']
-name_server_url = f'http://{name_server_ip}:{name_server_port}/'
+name_server_url = f'http://{name_server_ip}:{name_server_port}'
 
 storage_server_port = os.environ['STORAGE_SERVER_PORT']
 
+base_dir = '/upload_folder/'
 
 def send_data_to_server(file_path, ip):
     filename = os.path.basename(file_path)
     multipart_form_data = {
         'file': (filename, open(file_path, 'rb')),
     }
-    file_path_send = os.path.join(*(file_path.split(os.path.sep)[2:]))
+    file_path_send = os.path.relpath(file_path, base_dir)
     response = requests.post(
         f'http://{ip}:{storage_server_port}/upload',
         files=multipart_form_data,
@@ -24,8 +25,10 @@ def send_data_to_server(file_path, ip):
 
 
 def get_server_ip():
-    response = requests.get(f'{name_server_url}api/storage/available/')
-    return response.json()[0]['ip']
+    response = requests.get(f'{name_server_url}/api/v1/storage/available/')
+    print(response)
+    print(response.json())
+    return response.json()['ip']
 
 
 def main(argv):

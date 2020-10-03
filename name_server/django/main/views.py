@@ -1,132 +1,65 @@
-from rest_framework import (
-    viewsets,
-    response,
-    status,
-)
-from rest_framework.decorators import action
-
-from django.http import Http404
 from django.conf import settings
 
 from .models import File
 from .models import Storage
 
-from .serializers import FileSerializer
-from .serializers import StorageSerializer
-
+from django.http import HttpResponse, JsonResponse
+import random
 import logging
 import requests
 
 logger = logging.getLogger(__name__)
 
 
-class FileViewSet(viewsets.ModelViewSet):
-    serializer_class = FileSerializer
-    queryset = File.objects.all()
+def available(request):
+    available_servers = Storage.objects.filter(status='UP')
 
-    def create(self, request, *args, **kwargs):
-        """
-        Saves file if it's new. Adds storage if the file already exists.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    if len(available_servers) == 0:
+        return HttpResponse(status=404)
 
-        file_path = serializer.validated_data['file_path']
-        file_exist = File.objects.filter(file_path=file_path).count() > 0
-        if file_exist:
-            file = File.objects.get(file_path=file_path)
-            file.storage.add(serializer.validated_data['storage'][0])
-        else:
-            self.perform_create(serializer)
+    available_server = random.choice(available_servers)
 
-        headers = self.get_success_headers(serializer.data)
-        return response.Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers,
-        )
+    ip = available_server.ip
+    return JsonResponse({'ip': ip}, status=200)
 
-    def destroy(self, request, *args, **kwargs):
-        """
-        Send delete request to all servers with file, then delete file
-        from django database.
-        """
-        instance = self.get_object()
-        servers = instance.storage.all()
+
+def create_storage(request):
+    server_ip = request.META.get('REMOTE_ADDR')
+    Storage.objects.create(ip=server_ip)
+    return HttpResponse(status=200)
+
+
+def file_view(request):
+    if request.method == 'POST':
+        file_path = request.POST.get('file_path')
+        file_hash = request.POST.get('file_hash')
+        server_ip = request.META.get('REMOTE_ADDR')
+
+        storage = Storage.objects.get(ip=server_ip)
+        file = File.objects.filter(file_path=file_path).first()
+
+        if file is None:
+            file = File.objects.create(file_path=file_path,
+                                       hash=file_hash)
+        elif file.hash != file_hash:
+            file.delete()
+            file = File.objects.create(file_path=file_path,
+                                       hash=file_hash)
+        file.storage.add(storage)
+
+        return HttpResponse(status=200)
+    elif request.method == 'DELETE':
+        file_path = request.POST.get('file_path')
+
+        file = File.objects.get(file_path=file_path)
+        servers = file.storage
         for server in servers:
             url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
             requests.post(
                 url,
-                data={'file_path': instance.file_path},
+                data={'file_path': file_path},
             )
 
-        self.perform_destroy(instance)
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(status=200)
 
-    @action(detail=False, methods=['GET'])
-    def id(self, request):
-        """
-        Get the file id by file name.
-
-        :param request: Request body.
-            Should include parameter file_path - the path of
-            the file on the server.
-        :return: {'id': id_of_the_file}
-        """
-        if 'file_path' not in request.GET:
-            raise Http404
-
-        file_path = request.GET['file_path']
-        file = File.objects.get(file_path=file_path)
-        return response.Response({'id': file.id}, status.HTTP_200_OK)
-
-    @action(detail=True, methods=['GET'])
-    def replicate_ip(self, request, pk):
-        """
-        Get the list of servers on which you can put a replica of a file.
-        """
-        file = File.objects.get(pk=pk)
-        file_servers = file.storage.all()
-        num_copies = file_servers.count()
-
-        if num_copies < settings.NUM_OF_REPLICAS:
-            available_servers = Storage.objects.filter(status='UP')
-            no_file_servers = available_servers.difference(file_servers)
-            serializer = StorageSerializer(no_file_servers, many=True)
-            return response.Response(serializer.data, status.HTTP_200_OK)
-
-        return response.Response([], status.HTTP_200_OK)
-
-
-class StorageViewSet(viewsets.ModelViewSet):
-    serializer_class = StorageSerializer
-    queryset = Storage.objects.all()
-
-    @action(detail=False, methods=['GET'])
-    def available(self, request):
-        available_servers = Storage.objects.filter(status='UP')
-        serializer = StorageSerializer(available_servers, many=True)
-        return response.Response(serializer.data, status.HTTP_200_OK)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data={'ip': request.META.get('REMOTE_ADDR')})
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return response.Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    @action(detail=False, methods=['GET'])
-    def id(self, request):
-        """
-        Get the storage id by ip.
-
-        :param request: Request body.
-            Should include parameter ip - the ip of the storage.
-        :return: {'ip': ip_of_the_server}
-        """
-        if 'ip' not in request.GET:
-            raise Http404
-
-        ip = request.GET['ip']
-        storage = Storage.objects.get(ip=ip)
-        return response.Response({'id': storage.id}, status.HTTP_200_OK)
+    return HttpResponse(status=400)

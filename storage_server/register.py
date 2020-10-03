@@ -3,7 +3,7 @@ import requests
 
 
 def register():
-    response = requests.post(f'http://{ip}:{port}/api/storage/')
+    response = requests.post(f'http://{ip}:{port}/api/v1/storage/')
     print(response.status_code)
 
 

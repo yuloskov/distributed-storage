@@ -13,37 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('main.urls'))
+    path('api/v1/', include('main.urls'))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-if settings.DEBUG:
-    # Additional url patterns for debug mode
-    openapi_info = openapi.Info(
-        title='CRUD API',
-        default_version='v1',
-        description='Api for storage name server',
-    )
-    schema_view = get_schema_view(
-        openapi_info,
-        public=True,
-    )
-    urlpatterns += [
-        url(
-            r'^swagger/$',
-            schema_view.with_ui(
-                'swagger',
-            ),
-            name='schema-swagger-ui',
-        ),
-    ]

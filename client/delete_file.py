@@ -4,20 +4,15 @@ import requests
 
 name_server_ip = os.environ['NAME_SERVER_IP']
 name_server_port = os.environ['NAME_SERVER_PORT']
-name_server_url = f'http://{name_server_ip}:{name_server_port}/'
-file_url = f'{name_server_url}api/file/'
+name_server_url = f'http://{name_server_ip}:{name_server_port}'
 
 
 def delete_file(file_path):
     file_path_send = os.path.join(*(file_path.split(os.path.sep)[2:]))
-    response = requests.get(
-        f'{file_url}id/',
-        params={'file_path': file_path_send},
-    )
-    file_id = response.json()['id']
-    print(file_id)
 
-    response = requests.delete(f'{file_url}{file_id}/')
+    response = requests.delete(f'{name_server_url}/api/v1/file/', {
+        "file_path": file_path_send
+    })
     print(response.status_code)
 
 

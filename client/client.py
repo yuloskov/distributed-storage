@@ -4,7 +4,7 @@ import argparse
 import os
 import shutil
 
-from api import upload_file, delete_file, move_file, delete_dir, list_files, md5
+from api import upload_file, delete_file, move_file, delete_dir, list_files, md5, download_file
 
 parser = argparse.ArgumentParser(description='CLI for distributed file system')
 subparsers = parser.add_subparsers(title='command', dest='command', help='Command to interact with')
@@ -52,7 +52,7 @@ root = ''
 
 
 def full_path(path, base=None):
-    while path[0] == '/':
+    while len(path) > 0 and path[0] == '/':
         path = path[1:]
     if base is None:
         res = os.path.abspath(path)
@@ -183,7 +183,18 @@ def main(args, is_cli=True):
                     if p not in local_files:
                         delete_file(p)
         elif args.command == 'pull':
-            pass
+            for path in args.path:
+                abs_path = full_path(path)
+                rel_path = abs_path[len(root) + 1:]
+                server_files = list_files(rel_path)
+                local_files = list_local_file(rel_path, abs_path)
+                for p in server_files:
+                    fp = full_path(p, root)
+                    if p in local_files and local_files[p]['hash'] != server_files[p]['hash'] or p not in local_files:
+                        os.makedirs(os.path.dirname(fp), exist_ok=True)
+                        download_file(p, fp)
+                    else:
+                        print(f'File {p} is already up-to-date')
         else:
             raise NotImplementedError(f'Unknown command {args.command}')
 

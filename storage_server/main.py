@@ -2,7 +2,7 @@ import hashlib
 import os
 import errno
 import requests
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, send_file
 
 app = Flask(__name__)
 
@@ -30,9 +30,6 @@ def status():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method != 'POST':
-        return
-
     if 'file' not in request.files:
         return 400
 
@@ -68,8 +65,6 @@ def upload_file():
 
 @app.route('/replicate', methods=['POST'])
 def replicate():
-    if request.method != 'POST':
-        return
     dest_ip = request.form.get('dest_ip')
     file_path = request.form.get('file_path')
     print(file_path)
@@ -80,14 +75,20 @@ def replicate():
 
 @app.route('/delete', methods=['POST'])
 def delete_file():
-    if request.method == 'POST':
-        if 'file_path' not in request.form:
-            return 404
+    if 'file_path' not in request.form:
+        return 404
 
-        file_path = request.form['file_path']
-        file_path = os.path.join(save_folder, file_path)
-        os.remove(file_path)
-        return 200
+    file_path = request.form['file_path']
+    file_path = os.path.join(save_folder, file_path)
+    os.remove(file_path)
+    return 200
+
+
+@app.route('/download', methods=['GET'])
+def download_file():
+    file_path = request.args.get('file_path')
+    save_path = os.path.join(save_folder, file_path)
+    return send_file(save_path)
 
 
 def send_data_to_server(save_path, file_path, ip):

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
 from .models import File
 from .models import Storage
@@ -25,7 +26,7 @@ def available(request):
 
 def create_storage(request):
     server_ip = request.META.get('REMOTE_ADDR')
-    Storage.objects.create(ip=server_ip)
+    Storage.objects.get_or_create(ip=server_ip)
     return HttpResponse(status=200)
 
 
@@ -51,7 +52,7 @@ def file_view(request):
     elif request.method == 'DELETE':
         file_path = request.GET.get('file_path')
 
-        file = File.objects.get(file_path=file_path)
+        file = get_object_or_404(File, file_path=file_path)
         servers = file.storage.all()
         for server in servers:
             url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
@@ -62,6 +63,13 @@ def file_view(request):
         file.delete()
 
         return HttpResponse(status=200)
+    elif request.method == 'GET':
+        file_path = request.GET.get('file_path')
+
+        file = get_object_or_404(File, file_path=file_path)
+        storage = random.choice(file.storage.all())
+
+        return JsonResponse({"ip": storage.ip})
 
     return HttpResponse(status=400)
 

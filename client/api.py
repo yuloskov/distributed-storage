@@ -71,3 +71,16 @@ def list_files(dir_path):
         params={"dir_path": dir_path}
     )
     return response.json()
+
+
+def download_file(rel_path, abs_path):
+    print(f'[+] Choosing storage which has the {rel_path} file')
+    response = requests.get(f'{name_server_url}/api/v1/file/', params={"file_path": rel_path})
+    ip = response.json()['ip']
+    print(f'[+] Downloaing from {ip}')
+    response = requests.get(f'http://{ip}:{storage_server_port}/download', params={"file_path": rel_path})
+    if response.status_code != 200:
+        print(f'Failed to download file, HTTP code {response.status_code}')
+        return
+    open(abs_path, 'wb').write(response.content)
+    print('[+] File has been saved.')

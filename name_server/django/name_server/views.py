@@ -61,7 +61,7 @@ def file_view(request):
         file_path = request.GET.get('file_path')
 
         file = get_object_or_404(File, file_path=file_path)
-        servers = file.storage.all()
+        servers = file.storage.filter(status='UP')
         for server in servers:
             url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
             requests.post(
@@ -75,7 +75,7 @@ def file_view(request):
         file_path = request.GET.get('file_path')
 
         file = get_object_or_404(File, file_path=file_path)
-        storage = random.choice(file.storage.all())
+        storage = random.choice(file.storage.filter(status='UP'))
 
         return JsonResponse({"ip": storage.ip})
 

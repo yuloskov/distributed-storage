@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from .models import (
     File,
@@ -13,11 +13,11 @@ STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 
 def replicate_file(f):
-    file_servers = f.storage.all()
+    file_servers = f.storage.filter(status='UP')
     # if len(file_servers) == 0:
         # logs.write(f'File {f.file_path} lost forever')
     init_server = file_servers[0]
-    copy_to = Storage.objects.all().difference(file_servers).first()
+    copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
     # logs.write(
     #     f'Replicatting {f.file_path}. Starting from {init_server.ip}\n')
     response = requests.post(
@@ -31,7 +31,7 @@ def replicate_file(f):
 
 def replicate_all():
     need_to_replicate = File.objects.annotate(
-        num_replicas=Count('storage')
+        num_replicas=Count('storage', filter=Q(status='UP'))
     ).filter(num_replicas__lt=settings.NUM_OF_REPLICAS)
 
     for f in need_to_replicate:

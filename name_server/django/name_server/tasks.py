@@ -5,7 +5,8 @@ from django.dispatch import receiver
 
 from .signals import (
     file_saved,
-    storage_deleted,
+    storage_up,
+    storage_down,
 )
 from .utils import (
     replicate_all,
@@ -28,6 +29,12 @@ def replicate_on_file_save(sender, **kwargs):
     else:
         logger.info(f'ENOUGH COPIES {file.file_path}')
 
-@receiver(storage_deleted)
-def replicate_on_storage_delete(sender, **kwargs):
+
+@receiver(storage_down)
+def replicate_on_storage_down(sender, **kwargs):
     replicate_all()
+
+
+@receiver(storage_up)
+def sync_on_storage_up(sender, **kwargs):
+    pass

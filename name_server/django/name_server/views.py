@@ -63,7 +63,7 @@ def file_view(request):
         file = get_object_or_404(File, file_path=file_path)
         servers = file.storage.filter(status='UP')
         for server in servers:
-            url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
+            url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/file'
             requests.post(
                 url,
                 data={'file_path': file_path},

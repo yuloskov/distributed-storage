@@ -1,13 +1,14 @@
+import os
+
+import requests
 from django.conf import settings
 
-from logging import log
 from django.dispatch import receiver
 
 from .models import (
     File,
     Storage,
 )
-
 from .signals import (
     file_saved,
     storage_up,
@@ -23,6 +24,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # ----------- SIGNAL HANDLERS -----------
+
+STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
+
 @receiver(file_saved)
 def replicate_on_file_save(sender, **kwargs):
     file = kwargs['file']
@@ -42,7 +46,15 @@ def replicate_on_storage_down(sender, **kwargs):
 
 @receiver(storage_up)
 def sync_on_storage_up(sender, **kwargs):
-    pass
+    storage = kwargs['storage']
+
+    storage_files = requests.get(f'http://{storage.ip}:{STORAGE_SERVER_PORT}/dump_tree').json()
+    logger.info(storage_files)
+    for p in storage_files:
+        file = File.objects.filter(file_path=p).first()
+        if file is None or file.hash != storage_files[p]['hash']:
+            requests.delete(f'http://{storage.ip}:{STORAGE_SERVER_PORT}/file', params={"file_path": p})
+    replicate_all()
 
 
 # ----------- DJANGO Q HANDLERS -----------

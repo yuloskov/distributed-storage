@@ -26,7 +26,7 @@ def upload_file(rel_path, abs_path):
         'file': (filename, open(abs_path, 'rb')),
     }
     requests.post(
-        f'http://{ip}:{storage_server_port}/upload',
+        f'http://{ip}:{storage_server_port}/file',
         files=multipart_form_data,
         data={'file_path': rel_path},
     )
@@ -78,7 +78,7 @@ def download_file(rel_path, abs_path):
     response = requests.get(f'{name_server_url}/api/v1/file/', params={"file_path": rel_path})
     ip = response.json()['ip']
     print(f'[+] Downloaing from {ip}')
-    response = requests.get(f'http://{ip}:{storage_server_port}/download', params={"file_path": rel_path})
+    response = requests.get(f'http://{ip}:{storage_server_port}/file', params={"file_path": rel_path})
     if response.status_code != 200:
         print(f'Failed to download file, HTTP code {response.status_code}')
         return

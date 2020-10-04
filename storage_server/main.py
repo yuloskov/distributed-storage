@@ -28,41 +28,6 @@ def status():
     return 'OK'
 
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return 400
-
-    file = request.files['file']
-    if not file:
-        return 400
-
-    if 'file_path' not in request.form:
-        return 400
-
-    file_path = request.form['file_path']
-    print(file_path)
-    save_path = os.path.join(save_folder, file_path)
-    print(save_path)
-
-    if not os.path.exists(os.path.dirname(save_path)):
-        try:
-            os.makedirs(os.path.dirname(save_path))
-        except OSError as exc:  # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-
-    file.save(save_path)
-    print('File saved locally')
-
-    print('Writing file to db')
-    file_hash = md5(save_path)
-    save_file_to_db(file_path, file_hash)
-    print('Saved file to db')
-
-    return 'File received'
-
-
 @app.route('/replicate', methods=['POST'])
 def replicate():
     dest_ip = request.form.get('dest_ip')
@@ -73,22 +38,50 @@ def replicate():
     return 'OK'
 
 
-@app.route('/delete', methods=['POST'])
-def delete_file():
-    if 'file_path' not in request.form:
-        return 404
+@app.route('/file', methods=['DELETE', 'GET', 'POST'])
+def file():
+    if request.method == 'GET':
+        file_path = request.args.get('file_path')
+        save_path = os.path.join(save_folder, file_path)
+        return send_file(save_path)
+    elif request.method == 'POST':
+        if 'file' not in request.files:
+            return 'No file sent', 400
 
-    file_path = request.form['file_path']
-    file_path = os.path.join(save_folder, file_path)
-    os.remove(file_path)
-    return 200
+        file = request.files['file']
+        if not file:
+            return 'Bad file', 400
 
+        if 'file_path' not in request.form:
+            return 'No file path', 400
 
-@app.route('/download', methods=['GET'])
-def download_file():
-    file_path = request.args.get('file_path')
-    save_path = os.path.join(save_folder, file_path)
-    return send_file(save_path)
+        file_path = request.form['file_path']
+        print(file_path)
+        save_path = os.path.join(save_folder, file_path)
+        print(save_path)
+
+        if not os.path.exists(os.path.dirname(save_path)):
+            try:
+                os.makedirs(os.path.dirname(save_path))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        file.save(save_path)
+        print('File saved locally')
+
+        print('Writing file to db')
+        file_hash = md5(save_path)
+        save_file_to_db(file_path, file_hash)
+        print('Saved file to db')
+
+        return ''
+    elif request.method == 'DELETE':
+        file_path = request.args.get('file_path')
+        file_path = os.path.join(save_folder, file_path)
+        os.remove(file_path)
+        return ''
+    return 'Invalid method', 400
 
 
 @app.route('/dump_tree', methods=['GET'])
@@ -97,7 +90,7 @@ def list_files():
     for dir_path, dir_names, file_names in os.walk(save_folder):
         for file_name in file_names:
             path = os.path.join(dir_path, file_name)
-            sub_path = path[len(save_folder) + 1:]
+            sub_path = path[len(save_folder):]
             res[sub_path] = {
                 "hash": md5(path)
             }
@@ -110,7 +103,7 @@ def send_data_to_server(save_path, file_path, ip):
         'file': (filename, open(save_path, 'rb')),
     }
     response = requests.post(
-        f'http://{ip}:{storage_server_port}/upload',
+        f'http://{ip}:{storage_server_port}/file',
         files=multipart_form_data,
         data={'file_path': file_path},
     )

@@ -9,6 +9,8 @@ import os
 import time
 import requests
 
+from django.conf import settings
+
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 
@@ -19,7 +21,7 @@ class Command(BaseCommand):
         parser.add_argument('--repeat', type=int, default=10)
 
     def health_check(self):
-        # logs = open(settings.LOGS_PATH, 'a+')
+        logs = open(settings.LOGS_PATH, 'a+')
         for s in Storage.objects.all():
             try:
                 status = requests.get(
@@ -29,22 +31,21 @@ class Command(BaseCommand):
                 if s.status != 'UP':
                     s.status = 'UP'
                     s.save()
-                    storage_up.send(sender=None)
+                    storage_up.send(sender=None, storage=s)
 
-                # logs.write(f'{s.ip} : {status}\n')
-            except requests.exceptions.Timeout:
+                logs.write(f'{s.ip} : {status}\n')
+            except:
                 # Remove the server
                 if s.status != 'DN':
                     s.status = 'DN'
                     s.save()
                     storage_down.send(sender=None)
-                # logs.write(f'{s.ip} : FAIL\n')
+                logs.write(f'{s.ip} : FAIL\n')
 
                 # Send replication signal
 
-
-        # logs.write('\n')
-        # logs.close()
+        logs.write('\n')
+        logs.close()
 
     def handle(self, *args, **options):
         # if os.path.exists(LOGS_PATH):

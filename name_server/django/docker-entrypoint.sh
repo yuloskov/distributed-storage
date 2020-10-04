@@ -27,8 +27,14 @@ echo "done"
 echo
 
 
-echo "Scheduling..."
+echo "Starting helth check monitoring..."
 python manage.py health_check --repeat 10 &
+echo "done"
+echo
+
+
+echo "Starting django-q cluster..."
+python manage.py qcluster &
 echo "done"
 echo
 

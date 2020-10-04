@@ -41,11 +41,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 3-rd party apps
+    'django_q',
     # Project apps
     'name_server.apps.NameServerConfig',
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_COOKIE_SECURE = False
+
+Q_CLUSTER = {
+    'name': 'DjangORM',
+    'workers': 4,
+    'timeout': 90,
+    'retry': 120,
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default'
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

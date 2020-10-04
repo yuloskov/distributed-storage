@@ -4,7 +4,9 @@ import os
 import errno
 import shutil
 import argparse
+import sys
 
+from termcolor import cprint
 from api import upload_file, delete_file, move_file, delete_dir, list_files, md5, download_file
 
 parser = argparse.ArgumentParser(description='CLI for distributed file system')
@@ -49,9 +51,12 @@ push_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to upload
 pull_parser = subparsers.add_parser('pull', help='Pulls files from DFS storages')
 pull_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to download')
 
-pull_parser = subparsers.add_parser('import', help='Imports files from host to DFS local folder')
-pull_parser.add_argument('host_path', type=str, help='Path to the host dir')
-pull_parser.add_argument('dest_path', type=str, help='Path in the dfs dir')
+import_parser = subparsers.add_parser('import', help='Imports files from host to DFS local folder')
+import_parser.add_argument('host_path', type=str, help='Path to the host dir')
+import_parser.add_argument('dest_path', type=str, help='Path in the dfs dir')
+
+exit_parser = subparsers.add_parser('exit', help='Exit from the repl')
+
 
 root = ''
 
@@ -164,8 +169,35 @@ def main(args, is_cli=True):
         elif args.command == 'ls':
             abs_path = full_path(args.dir)
             rel_path = abs_path[len(root) + 1:]
-            print('Local', list_local_file(rel_path, abs_path))
-            print('Sever', list_files(rel_path))
+            local_files = list_local_file(rel_path, abs_path)
+            server_files = list_files(rel_path)
+
+            for p in local_files:
+                if p not in server_files:
+                    local_files[p]['status'] = 'new'
+                elif local_files[p]['hash'] != server_files[p]['hash']:
+                    local_files[p]['status'] = 'updated'
+                else:
+                    local_files[p]['status'] = 'unchanged'
+            for p in server_files:
+                if p not in local_files:
+                    local_files[p] = server_files[p]
+                    local_files[p]['status'] = 'deleted'
+
+            tasks = [
+                ('new', 'green'),
+                ('updated', 'yellow'),
+                ('unchanged', 'grey'),
+                ('deleted', 'red'),
+            ]
+            for status, color in tasks:
+                first = True
+                for p in local_files:
+                    if local_files[p]['status'] == status:
+                        if first:
+                            first = False
+                            print(f'{status.capitalize()} files:')
+                        cprint(f'\t{p} - {local_files[p]["hash"]}', color)
         elif args.command == 'cd':
             os.chdir(full_path(args.dir))
         elif args.command == 'push':
@@ -214,6 +246,8 @@ def main(args, is_cli=True):
                     shutil.copy(src, dst)
                 else:
                     raise
+        elif args.command == 'exit':
+            sys.exit(0)
         else:
             raise NotImplementedError(f'Unknown command {args.command}')
 

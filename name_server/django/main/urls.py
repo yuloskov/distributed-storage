@@ -10,4 +10,5 @@ urlpatterns = [
     path('storage/available/', available),
     path('storage/', create_storage),
     path('file/', file_view),
+    path('ls/', list_files)
 ]

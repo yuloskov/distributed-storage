@@ -49,17 +49,24 @@ def file_view(request):
 
         return HttpResponse(status=200)
     elif request.method == 'DELETE':
-        file_path = request.POST.get('file_path')
+        file_path = request.GET.get('file_path')
 
         file = File.objects.get(file_path=file_path)
-        servers = file.storage
+        servers = file.storage.all()
         for server in servers:
             url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/delete'
             requests.post(
                 url,
                 data={'file_path': file_path},
             )
+        file.delete()
 
         return HttpResponse(status=200)
 
     return HttpResponse(status=400)
+
+
+def list_files(request):
+    path = request.GET.get('dir_path')
+    res = {file.file_path: {"hash": file.hash} for file in File.objects.filter(file_path__startswith=path)}
+    return JsonResponse(res, status=200)

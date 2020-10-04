@@ -37,7 +37,7 @@ rmdir_parser.add_argument('dir', type=str, help='Dir name')
 
 ls_parser = subparsers.add_parser('ls', help='Lists files in the current directory')
 ls_parser.add_argument('-l', dest='verbose', action='store_true', help='Verbose')
-ls_parser.add_argument('dir', type=str, help='Dir name')
+ls_parser.add_argument('dir', type=str, default='.', nargs='?', help='Dir name')
 
 cd_parser = subparsers.add_parser('cd', help='Changes working directory')
 cd_parser.add_argument('dir', type=str, help='Dir name')
@@ -138,8 +138,8 @@ def main(args, is_cli=True):
 
                 delete_file(rel_path)
         elif args.command == 'mv':
-            os.rename(full_path(args.src), full_path(args.dst))
-            move_file(args.src, args.dst)
+            os.rename(full_path(args.src), full_path(args.dest))
+            move_file(args.src, args.dest)
         elif args.command == 'mkdir':
             if args.parent:
                 os.makedirs(full_path(args.dir), exist_ok=True)
@@ -159,7 +159,8 @@ def main(args, is_cli=True):
         elif args.command == 'ls':
             abs_path = full_path(args.dir)
             rel_path = abs_path[len(root) + 1:]
-            print(list_local_file(rel_path, abs_path))
+            print('Local', list_local_file(rel_path, abs_path))
+            print('Sever', list_files(rel_path))
         elif args.command == 'cd':
             os.chdir(full_path(args.dir))
         elif args.command == 'push':
@@ -171,14 +172,14 @@ def main(args, is_cli=True):
                 server_files = list_files(rel_path)
                 local_files = list_local_file(rel_path, abs_path)
 
-                for p, local_file in local_files:
-                    if p in server_files and server_files[p]['hash'] != local_file['hash']:
+                for p in local_files:
+                    if p in server_files and server_files[p]['hash'] != local_files[p]['hash']:
                         upload_file(p, full_path(p, root))
                     elif p not in server_files:
                         upload_file(p, full_path(p, root))
                     else:
                         print(f'File {p} is already up-to-date')
-                for p, server_file in server_files:
+                for p in server_files:
                     if p not in local_files:
                         delete_file(p)
         elif args.command == 'pull':

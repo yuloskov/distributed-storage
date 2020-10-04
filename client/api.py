@@ -42,14 +42,14 @@ def delete_file(rel_path):
     print(f'[+] Deleting {rel_path}')
     requests.delete(
         f'{name_server_url}/api/v1/file/',
-        data={"file_path": rel_path}
+        params={"file_path": rel_path}
     )
     print('[+] File has been deleted.')
 
 
 def move_file(src_path, dst_path):
     print(f'[+] Moving file from {src_path} to {dst_path}')
-    requests.delete(
+    requests.post(
         f'{name_server_url}/api/v1/file/',
         data={"src_path": src_path, "dst_path": dst_path}
     )
@@ -60,7 +60,7 @@ def delete_dir(dir_path):
     print(f'[+] Deleting {dir_path}')
     requests.delete(
         f'{name_server_url}/api/v1/dir/',
-        data={"dir_path": dir_path}
+        params={"dir_path": dir_path}
     )
     print('[+] Directory has been deleted.')
 
@@ -68,6 +68,6 @@ def delete_dir(dir_path):
 def list_files(dir_path):
     response = requests.get(
         f'{name_server_url}/api/v1/ls/',
-        data={"dir_path": dir_path}
+        params={"dir_path": dir_path}
     )
     return response.json()

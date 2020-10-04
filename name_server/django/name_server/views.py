@@ -1,8 +1,12 @@
+from logging import log
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from .models import File
-from .models import Storage
+from .models import (
+    File,
+    Storage,
+)
+from .signals import file_saved
 
 from django.http import HttpResponse, JsonResponse
 import random
@@ -47,6 +51,10 @@ def file_view(request):
             file = File.objects.create(file_path=file_path,
                                        hash=file_hash)
         file.storage.add(storage)
+
+        # Send replication signal
+        logger.info('Sending SIGNAL on file save')
+        file_saved.send(sender=None, file=file, storage=storage)
 
         return HttpResponse(status=200)
     elif request.method == 'DELETE':

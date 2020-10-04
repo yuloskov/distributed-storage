@@ -31,6 +31,8 @@ ALLOWED_HOSTS = list(os.environ['DJANGO_ALLOWED_HOSTS'].split(','))
 NUM_OF_REPLICAS = int(os.environ['NUM_OF_REPLICAS'])
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
+LOGS_PATH = 'LOGS.txt'
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Project apps
-    'main',
+    'name_server.apps.NameServerConfig',
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_COOKIE_SECURE = False

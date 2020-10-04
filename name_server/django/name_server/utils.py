@@ -8,6 +8,14 @@ from .models import (
 
 import os
 import requests
+from datetime import datetime, timedelta
+
+from django_q.tasks import schedule
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
@@ -26,6 +34,14 @@ def replicate_file(f):
             'file_path': f.file_path,
             'dest_ip': copy_to.ip
         }
+    )
+
+    next_run = datetime.now() + timedelta(seconds=10)
+    schedule(
+        'name_server.tasks.file_replication_check',
+        f.pk, copy_to.pk,
+        next_run=next_run,
+        repeats=1,
     )
 
 

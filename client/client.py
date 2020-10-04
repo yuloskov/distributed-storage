@@ -3,9 +3,8 @@
 import argparse
 import os
 import shutil
-from subprocess import check_output
 
-from api import upload_file, delete_file, move_file, delete_dir
+from api import upload_file, delete_file, move_file, delete_dir, list_files, md5
 
 parser = argparse.ArgumentParser(description='CLI for distributed file system')
 subparsers = parser.add_subparsers(title='command', dest='command', help='Command to interact with')
@@ -43,32 +42,58 @@ ls_parser.add_argument('dir', type=str, help='Dir name')
 cd_parser = subparsers.add_parser('cd', help='Changes working directory')
 cd_parser.add_argument('dir', type=str, help='Dir name')
 
-# sync
+push_parser = subparsers.add_parser('push', help='Uploads file to DFS storages')
+push_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to upload')
+
+pull_parser = subparsers.add_parser('pull', help='Pulls files from DFS storages')
+pull_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to download')
 
 root = ''
-cwd = ''
 
 
-def full_path(path, root=root):
+def full_path(path, base=None):
     while path[0] == '/':
         path = path[1:]
-    return os.path.join(root, path)
+    if base is None:
+        res = os.path.abspath(path)
+    else:
+        cwd = os.getcwd()
+        os.chdir(base)
+        res = os.path.abspath(path)
+        os.chdir(cwd)
+    if len(res) < len(root):
+        raise ValueError('Out of the root directory')
+    return res
+
+
+def list_local_file(rel_path, abs_path):
+    if os.path.isfile(abs_path):
+        return {
+            rel_path: {
+                "hash": md5(abs_path)
+            }
+        }
+    res = {}
+    for dir_path, dir_names, file_names in os.walk(abs_path):
+        for file_name in file_names:
+            path = os.path.join(dir_path, file_name)
+            sub_path = path[len(abs_path) + 1:]
+            res[os.path.join(rel_path, sub_path)] = {
+                "hash": md5(path)
+            }
+    return res
 
 
 def repl():
-    global cwd
-
-    cwd = root
     while True:
-        print(f'{cwd[len(root):]}$', end=' ')
+        print(f'{os.getcwd()[len(root):]}$', end=' ')
         args = parser.parse_args(input().split(' '))
-        print(args)
+        # print(args)
         main(args, is_cli=False)
 
 
 def main(args, is_cli=True):
     global root
-    global cwd
 
     if is_cli and args.command == 'init':
         print(f'Initialize DFS root at {args.dir}')
@@ -81,13 +106,17 @@ def main(args, is_cli=True):
         else:
             raise NotImplementedError()
         with open('.dfsroot', 'w') as file:
-            file.write(os.path.abspath(args.dir))
+            root = os.path.abspath(args.dir)
+            file.write(root)
 
-        root = open('.dfsroot', 'r').readline()
+        os.chdir(root)
         if args.repl:
             repl()
     else:
-        root = open('.dfsroot', 'r').readline()
+        if root == '':
+            root = open('.dfsroot', 'r').readline()
+        if is_cli:
+            os.chdir(root)
 
         if is_cli and args.command == 'repl':
             repl()
@@ -98,8 +127,6 @@ def main(args, is_cli=True):
 
                 os.makedirs(os.path.dirname(abs_path), exist_ok=True)
                 open(abs_path, 'w')
-
-                upload_file(rel_path, abs_path)
         elif args.command == 'rm':
             for file in args.file:
                 abs_path = full_path(file)
@@ -130,12 +157,32 @@ def main(args, is_cli=True):
             shutil.rmtree(path)
             delete_dir(args.dir)
         elif args.command == 'ls':
-            out = check_output(f'ls {"-la" if args.force else "-a"}{full_path(args.dir)}')
-            print(out)
+            abs_path = full_path(args.dir)
+            rel_path = abs_path[len(root) + 1:]
+            print(list_local_file(rel_path, abs_path))
         elif args.command == 'cd':
-            cwd = full_path(args.dir, cwd)
-            if len(cwd) < len(root):
-                raise ValueError('Out of the root directory')
+            os.chdir(full_path(args.dir))
+        elif args.command == 'push':
+            for path in args.path:
+                abs_path = full_path(path)
+                rel_path = abs_path[len(root) + 1:]
+                print(f'uploading {path}')
+
+                server_files = list_files(rel_path)
+                local_files = list_local_file(rel_path, abs_path)
+
+                for p, local_file in local_files:
+                    if p in server_files and server_files[p]['hash'] != local_file['hash']:
+                        upload_file(p, full_path(p, root))
+                    elif p not in server_files:
+                        upload_file(p, full_path(p, root))
+                    else:
+                        print(f'File {p} is already up-to-date')
+                for p, server_file in server_files:
+                    if p not in local_files:
+                        delete_file(p)
+        elif args.command == 'pull':
+            pass
         else:
             raise NotImplementedError(f'Unknown command {args.command}')
 

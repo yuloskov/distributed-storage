@@ -1,3 +1,4 @@
+import hashlib
 import os
 import requests
 
@@ -6,6 +7,14 @@ name_server_port = os.environ['NAME_SERVER_PORT']
 name_server_url = f'http://{name_server_ip}:{name_server_port}'
 
 storage_server_port = os.environ['STORAGE_SERVER_PORT']
+
+
+def md5(file_name):
+    hash_md5 = hashlib.md5()
+    with open(file_name, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
 def upload_file(rel_path, abs_path):
@@ -54,3 +63,11 @@ def delete_dir(dir_path):
         data={"dir_path": dir_path}
     )
     print('[+] Directory has been deleted.')
+
+
+def list_files(dir_path):
+    response = requests.get(
+        f'{name_server_url}/api/v1/ls/',
+        data={"dir_path": dir_path}
+    )
+    return response.json()

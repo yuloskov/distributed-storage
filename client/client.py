@@ -92,8 +92,10 @@ def list_local_file(rel_path, abs_path):
 def repl():
     while True:
         print(f'{os.getcwd()[len(root):]}$', end=' ')
-        args = parser.parse_args(input().split(' '))
-        # print(args)
+        try:
+            args = parser.parse_args(input().split(' '))
+        except BaseException:
+            continue
         main(args, is_cli=False)
 
 

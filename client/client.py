@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse
 import os
+import errno
 import shutil
+import argparse
 
 from api import upload_file, delete_file, move_file, delete_dir, list_files, md5, download_file
 
@@ -22,7 +23,7 @@ touch_parser.add_argument('file', type=str, nargs='+', help='File name to create
 rm_parser = subparsers.add_parser('rm', help='Removes a file/directory from the DFS')
 rm_parser.add_argument('file', type=str, nargs='+', help='Files name to remove')
 
-mv_parser = subparsers.add_parser('mv', help='Removes a file/directory from the DFS')
+mv_parser = subparsers.add_parser('mv', help='Moves a file/directory from source to destination')
 mv_parser.add_argument('src', type=str, help='Src file')
 mv_parser.add_argument('dest', type=str, help='Dest file')
 
@@ -47,6 +48,10 @@ push_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to upload
 
 pull_parser = subparsers.add_parser('pull', help='Pulls files from DFS storages')
 pull_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to download')
+
+pull_parser = subparsers.add_parser('import', help='Imports files from host to DFS local folder')
+pull_parser.add_argument('host_path', type=str, help='Path to the host dir')
+pull_parser.add_argument('dest_path', type=str, help='Path in the dfs dir')
 
 root = ''
 
@@ -123,8 +128,6 @@ def main(args, is_cli=True):
         elif args.command == 'touch':
             for file in args.file:
                 abs_path = full_path(file)
-                rel_path = abs_path[len(root) + 1:]
-
                 os.makedirs(os.path.dirname(abs_path), exist_ok=True)
                 open(abs_path, 'w')
         elif args.command == 'rm':
@@ -195,6 +198,20 @@ def main(args, is_cli=True):
                         download_file(p, fp)
                     else:
                         print(f'File {p} is already up-to-date')
+
+        elif args.command == 'import':
+            src = args.host_path
+
+            folder_to_copy = os.path.basename(os.path.normpath(src))
+            dst = os.path.join(full_path(args.dest_path), folder_to_copy)
+
+            try:
+                shutil.copytree(src, dst)
+            except OSError as exc:
+                if exc.errno == errno.ENOTDIR:
+                    shutil.copy(src, dst)
+                else:
+                    raise
         else:
             raise NotImplementedError(f'Unknown command {args.command}')
 

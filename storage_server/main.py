@@ -91,6 +91,19 @@ def download_file():
     return send_file(save_path)
 
 
+@app.route('/dump_tree', methods=['GET'])
+def list_files():
+    res = {}
+    for dir_path, dir_names, file_names in os.walk(save_folder):
+        for file_name in file_names:
+            path = os.path.join(dir_path, file_name)
+            sub_path = path[len(save_folder) + 1:]
+            res[sub_path] = {
+                "hash": md5(path)
+            }
+    return res
+
+
 def send_data_to_server(save_path, file_path, ip):
     filename = os.path.basename(file_path)
     multipart_form_data = {

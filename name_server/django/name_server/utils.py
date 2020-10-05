@@ -23,6 +23,7 @@ STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 def replicate_file(f):
     file_servers = f.storage.filter(status='UP')
 
+    # TODO what if the file has enough replicas?
     init_server = file_servers.first()
     copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
 

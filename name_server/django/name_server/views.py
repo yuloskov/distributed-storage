@@ -64,6 +64,7 @@ def file_view(request):
         servers = file.storage.filter(status='UP')
         for server in servers:
             url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/file'
+            # TODO post request to delete files????
             requests.post(
                 url,
                 data={'file_path': file_path},

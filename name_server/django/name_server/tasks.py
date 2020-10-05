@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
+
 @receiver(file_saved)
 def replicate_on_file_save(sender, **kwargs):
     file = kwargs['file']

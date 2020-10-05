@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 if s.status != 'DN':
                     s.status = 'DN'
                     s.save()
-                    storage_down.send(sender=None)
+                    storage_down.send(sender=None, storage=s)
                 logs.write(f'{s.ip} : FAIL\n')
 
                 # Send replication signal

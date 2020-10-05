@@ -41,7 +41,11 @@ def replicate_on_file_save(sender, **kwargs):
 
 @receiver(storage_down)
 def replicate_on_storage_down(sender, **kwargs):
-    replicate_all()
+    storage = kwargs['storage']
+    # Replicate files that were on the failed storage
+    for f in storage.files.all():
+        logger.info(f'STARTING REPLICATION OF FILE {f.file_path}')
+        replicate_file(f)
 
 
 @receiver(storage_up)

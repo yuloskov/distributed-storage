@@ -22,22 +22,25 @@ STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 def replicate_file(f):
     file_servers = f.storage.filter(status='UP')
-    init_server = file_servers.first()
-    if init_server is None:
-        return
-    copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
-    if copy_to is not None:
-        try:
-            response = requests.post(
-                f'http://{init_server.ip}:{STORAGE_SERVER_PORT}/replicate',
-                data={
-                    'file_path': f.file_path,
-                    'dest_ip': copy_to.ip
-                }
-            )
-        except:
-            pass
 
+    init_server = file_servers.first()
+    copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
+
+    if init_server is None or copy_to is None:
+        return
+
+    try:
+        requests.post(
+            f'http://{init_server.ip}:{STORAGE_SERVER_PORT}/replicate',
+            data={
+                'file_path': f.file_path,
+                'dest_ip': copy_to.ip
+            }
+        )
+    except:
+        pass
+
+    # Schedule replication check
     next_run = datetime.now() + timedelta(seconds=10)
     schedule(
         'name_server.tasks.file_replication_check',

@@ -2,7 +2,8 @@ import hashlib
 import os
 import errno
 import requests
-from flask import Flask, request, redirect, url_for, send_file
+from flask import Flask, request, send_file
+
 
 app = Flask(__name__)
 

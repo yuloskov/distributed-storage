@@ -97,8 +97,33 @@ of the outdated file.
 So, such files have to be found and replicated. The mechanism is the same as replication on file upload.
 
 ## How to run 
+Here is the instruction of how to start the testing setup.
 
+To start the _**name server**_ run 
+```
+docker-compose up -d --build
+``` 
+in the name_server directory. To start two storage servers and one client
+run
+```
+./test_setup.sh
+```
+in the project root directory.
 
 ## How to use
+One can interact with our system via cli tool. Here are the main commands:
+```
+touch [file_name] - creates a file in the current directory
+rm [file_name] - deletes file/directory from dfs
+mv [src] [dst] - moves a file/directory from source to destination
+mkdir [dir_name] - creates a new directory
+rmdir [dir_name] - removes an existing directory
+ls - lists files in the current directory
+cd [dir_name] - changes working directory
+push [path] - uploads current state of the file/directory to the dfs
+pull [path] - downloads current dfs state to directory
+import [host_path] [dfs_path] - copies file/directory from host to dfs folder
+export [dfs_path] [host_path] - copies file/directory from dfs folder to host 
+```
 
 

@@ -53,7 +53,7 @@ pull_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to downlo
 
 import_parser = subparsers.add_parser('import', help='Imports files from host to DFS local folder')
 import_parser.add_argument('host_path', type=str, help='Path to the host dir or file')
-import_parser.add_argument('dest_path', type=str, help='Path in the dfs dir or file')
+import_parser.add_argument('dfs_path', type=str, help='Path in the dfs dir or file')
 
 import_parser = subparsers.add_parser('export', help='Exports files from DFS to local folder')
 import_parser.add_argument('dfs_path', type=str, help='Path to the dfs dir ot file')

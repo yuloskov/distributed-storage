@@ -21,9 +21,7 @@ x-django-common-environment: &django-common-environment
 
 services:
   nginx:
-    build:
-      context: .
-      dockerfile: nginx/Dockerfile
+    build: nginx
     image: nginx:latest
     ports:
       - "8000:8000"

@@ -1,6 +1,6 @@
-from logging import log
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse, JsonResponse
 
 from .models import (
     File,
@@ -8,7 +8,6 @@ from .models import (
 )
 from .signals import file_saved
 
-from django.http import HttpResponse, JsonResponse
 import random
 import logging
 import requests

@@ -1,8 +1,3 @@
-import os
-
-import requests
-from django.conf import settings
-
 from django.dispatch import receiver
 
 from .models import (
@@ -19,12 +14,14 @@ from .utils import (
     replicate_file,
 )
 
+import os
+import requests
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 # ----------- SIGNAL HANDLERS -----------
-
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 
@@ -33,11 +30,7 @@ def replicate_on_file_save(sender, **kwargs):
     file = kwargs['file']
     storage = kwargs['storage']
 
-    if file.storage.count() < settings.NUM_OF_REPLICAS:
-        logger.info(f'REPLICATING {file.file_path}')
-        replicate_file(file)
-    else:
-        logger.info(f'ENOUGH COPIES {file.file_path}')
+    replicate_file(file)
 
 
 @receiver(storage_down)

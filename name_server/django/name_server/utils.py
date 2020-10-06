@@ -21,9 +21,14 @@ STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 
 def replicate_file(f):
+    if f.storage.count() >= settings.NUM_OF_REPLICAS:
+        logger.info(f'ENOUGH COPIES {f.file_path}')
+        return
+
+    logger.info(f'REPLICATING {f.file_path}')
+
     file_servers = f.storage.filter(status='UP')
 
-    # TODO what if the file has enough replicas?
     init_server = file_servers.first()
     copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
 
@@ -42,7 +47,7 @@ def replicate_file(f):
         pass
 
     # Schedule replication check
-    next_run = datetime.now() + timedelta(seconds=10)
+    next_run = datetime.now() + timedelta(seconds=5)
     schedule(
         'name_server.tasks.file_replication_check',
         f.pk, copy_to.pk,

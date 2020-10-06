@@ -37,23 +37,30 @@ def file_view(request):
     if request.method == 'POST':
         file_path = request.POST.get('file_path')
         file_hash = request.POST.get('file_hash')
+        file_size = request.POST.get('file_size')
         server_ip = request.META.get('REMOTE_ADDR')
 
         storage = Storage.objects.get(ip=server_ip)
         file = File.objects.filter(file_path=file_path).first()
 
         if file is None:
-            file = File.objects.create(file_path=file_path,
-                                       hash=file_hash)
+            file = File.objects.create(
+                file_path=file_path,
+                hash=file_hash,
+                size=file_size,
+            )
         elif file.hash != file_hash:
             file.delete()
-            file = File.objects.create(file_path=file_path,
-                                       hash=file_hash)
+            file = File.objects.create(
+                file_path=file_path,
+                hash=file_hash,
+                size=file_size,
+            )
         file.storage.add(storage)
 
         # Send replication signal
         logger.info('Sending SIGNAL on file save')
-        file_saved.send(sender=None, file=file, storage=storage)
+        file_saved.send(sender=None, file=file)
 
         return HttpResponse(status=200)
     elif request.method == 'DELETE':
@@ -73,12 +80,13 @@ def file_view(request):
         file = get_object_or_404(File, file_path=file_path)
         storage = random.choice(file.storage.filter(status='UP'))
 
-        return JsonResponse({"ip": storage.ip})
+        return JsonResponse({'ip': storage.ip})
 
     return HttpResponse(status=400)
 
 
 def list_files(request):
     path = request.GET.get('dir_path')
-    res = {file.file_path: {"hash": file.hash} for file in File.objects.filter(file_path__startswith=path)}
+    res = {file.file_path: {'hash': file.hash, 'file_size': file.size, 'modified': file.last_modified}
+           for file in File.objects.filter(file_path__startswith=path)}
     return JsonResponse(res, status=200)

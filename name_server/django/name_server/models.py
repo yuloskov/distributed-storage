@@ -37,5 +37,11 @@ class File(models.Model):
         related_name="files",
     )
 
+    size = models.CharField(
+        max_length=32,
+    )
+
+    last_modified = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.file_path

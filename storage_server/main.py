@@ -73,7 +73,8 @@ def file():
 
         print('Writing file to db')
         file_hash = md5(save_path)
-        save_file_to_db(file_path, file_hash)
+        file_size = round(os.path.getsize(save_path)/(1024*1024), 2)
+        save_file_to_db(file_path, file_hash, file_size)
         print('Saved file to db')
 
         return ''
@@ -111,10 +112,10 @@ def send_data_to_server(save_path, file_path, ip):
     print(response.status_code)
 
 
-def save_file_to_db(file_path, file_hash):
+def save_file_to_db(file_path, file_hash, file_size):
     response = requests.post(
         file_url,
-        data={'file_path': file_path, 'file_hash': file_hash},
+        data={'file_path': file_path, 'file_hash': file_hash, 'file_size': file_size},
     )
     print(response.status_code)
 

@@ -79,11 +79,12 @@ def full_path(path, base=None):
     return res
 
 
-def list_local_file(rel_path, abs_path):
+def list_local_files(rel_path, abs_path):
     if os.path.isfile(abs_path):
         return {
             rel_path: {
-                "hash": md5(abs_path)
+                'hash': md5(abs_path),
+                'file_size': round(os.path.getsize(abs_path)/(1024*1024), 2)
             }
         }
     res = {}
@@ -92,7 +93,8 @@ def list_local_file(rel_path, abs_path):
             path = os.path.join(dir_path, file_name)
             sub_path = path[len(abs_path) + 1:]
             res[os.path.join(rel_path, sub_path)] = {
-                "hash": md5(path)
+                'hash': md5(path),
+                'file_size': round(os.path.getsize(path)/(1024*1024), 2)
             }
     return res
 
@@ -153,8 +155,6 @@ def main(args, is_cli=True):
         elif args.command == 'rm':
             for file in args.file:
                 abs_path = full_path(file)
-                rel_path = abs_path[len(root) + 1:]
-
                 os.remove(abs_path)
         elif args.command == 'mv':
             os.rename(full_path(args.src), full_path(args.dest))
@@ -176,7 +176,7 @@ def main(args, is_cli=True):
         elif args.command == 'ls':
             abs_path = full_path(args.dir)
             rel_path = abs_path[len(root) + 1:]
-            local_files = list_local_file(rel_path, abs_path)
+            local_files = list_local_files(rel_path, abs_path)
             server_files = list_files(rel_path)
 
             for p in local_files:
@@ -200,11 +200,18 @@ def main(args, is_cli=True):
             for status, color in tasks:
                 first = True
                 for p in local_files:
-                    if local_files[p]['status'] == status:
+                    file = local_files[p]
+                    if file['status'] == status:
                         if first:
                             first = False
                             print(f'{status.capitalize()} files:')
-                        cprint(f'\t{p} - {local_files[p]["hash"]}', color)
+
+                        if 'modified' in file:
+                            s = f'\t{p} - {file["hash"]} - {file["file_size"]}MB - {file["modified"]}'
+                        else:
+                            s = f'\t{p} - {file["hash"]} - {file["file_size"]}MB'
+
+                        cprint(s, color)
         elif args.command == 'cd':
             os.chdir(full_path(args.dir))
         elif args.command == 'push':
@@ -214,7 +221,7 @@ def main(args, is_cli=True):
                 print(f'Uploading {path}...')
 
                 server_files = list_files(rel_path)
-                local_files = list_local_file(rel_path, abs_path)
+                local_files = list_local_files(rel_path, abs_path)
 
                 for p in local_files:
                     if p in server_files and server_files[p]['hash'] != local_files[p]['hash']:
@@ -231,7 +238,7 @@ def main(args, is_cli=True):
                 abs_path = full_path(path)
                 rel_path = abs_path[len(root) + 1:]
                 server_files = list_files(rel_path)
-                local_files = list_local_file(rel_path, abs_path)
+                local_files = list_local_files(rel_path, abs_path)
                 for p in server_files:
                     fp = full_path(p, root)
                     if p in local_files and local_files[p]['hash'] != server_files[p]['hash'] or p not in local_files:

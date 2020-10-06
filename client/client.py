@@ -52,11 +52,14 @@ pull_parser = subparsers.add_parser('pull', help='Pulls files from DFS storages'
 pull_parser.add_argument('path', type=str, nargs='+', help='Files/dirs to download')
 
 import_parser = subparsers.add_parser('import', help='Imports files from host to DFS local folder')
-import_parser.add_argument('host_path', type=str, help='Path to the host dir')
-import_parser.add_argument('dest_path', type=str, help='Path in the dfs dir')
+import_parser.add_argument('host_path', type=str, help='Path to the host dir or file')
+import_parser.add_argument('dest_path', type=str, help='Path in the dfs dir or file')
+
+import_parser = subparsers.add_parser('export', help='Exports files from DFS to local folder')
+import_parser.add_argument('dfs_path', type=str, help='Path to the dfs dir ot file')
+import_parser.add_argument('host_path', type=str, help='Path on the host')
 
 exit_parser = subparsers.add_parser('exit', help='Exit from the repl')
-
 
 root = ''
 
@@ -102,6 +105,16 @@ def repl():
         except BaseException:
             continue
         main(args, is_cli=False)
+
+
+def copy_file_or_dir(src, dst):
+    try:
+        shutil.copytree(src, dst)
+    except OSError as exc:
+        if exc.errno == errno.ENOTDIR:
+            shutil.copy(src, dst)
+        else:
+            raise
 
 
 def main(args, is_cli=True):
@@ -229,17 +242,16 @@ def main(args, is_cli=True):
 
         elif args.command == 'import':
             src = args.host_path
-
             folder_to_copy = os.path.basename(os.path.normpath(src))
             dst = os.path.join(full_path(args.dest_path), folder_to_copy)
 
-            try:
-                shutil.copytree(src, dst)
-            except OSError as exc:
-                if exc.errno == errno.ENOTDIR:
-                    shutil.copy(src, dst)
-                else:
-                    raise
+            copy_file_or_dir(src, dst)
+        elif args.command == 'export':
+            src = full_path(args.dfs_path)
+            folder_to_copy = os.path.basename(os.path.normpath(src))
+            dst = os.path.join(args.host_path, folder_to_copy)
+
+            copy_file_or_dir(src, dst)
         elif args.command == 'exit':
             sys.exit(0)
         else:

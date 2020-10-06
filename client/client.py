@@ -7,7 +7,7 @@ import argparse
 import sys
 
 from termcolor import cprint
-from api import upload_file, delete_file, move_file, delete_dir, list_files, md5, download_file
+from api import upload_file, delete_file, list_files, md5, download_file
 
 parser = argparse.ArgumentParser(description='CLI for distributed file system')
 subparsers = parser.add_subparsers(title='command', dest='command', help='Command to interact with')
@@ -143,13 +143,8 @@ def main(args, is_cli=True):
                 rel_path = abs_path[len(root) + 1:]
 
                 os.remove(abs_path)
-
-                print(abs_path, rel_path)
-
-                delete_file(rel_path)
         elif args.command == 'mv':
             os.rename(full_path(args.src), full_path(args.dest))
-            move_file(args.src, args.dest)
         elif args.command == 'mkdir':
             if args.parent:
                 os.makedirs(full_path(args.dir), exist_ok=True)
@@ -165,7 +160,6 @@ def main(args, is_cli=True):
                     print('Abort')
                     return
             shutil.rmtree(path)
-            delete_dir(args.dir)
         elif args.command == 'ls':
             abs_path = full_path(args.dir)
             rel_path = abs_path[len(root) + 1:]
@@ -204,7 +198,7 @@ def main(args, is_cli=True):
             for path in args.path:
                 abs_path = full_path(path)
                 rel_path = abs_path[len(root) + 1:]
-                print(f'uploading {path}')
+                print(f'Uploading {path}...')
 
                 server_files = list_files(rel_path)
                 local_files = list_local_file(rel_path, abs_path)

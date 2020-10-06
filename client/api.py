@@ -47,24 +47,6 @@ def delete_file(rel_path):
     print('[+] File has been deleted.')
 
 
-def move_file(src_path, dst_path):
-    print(f'[+] Moving file from {src_path} to {dst_path}')
-    requests.post(
-        f'{name_server_url}/api/v1/file/',
-        data={"src_path": src_path, "dst_path": dst_path}
-    )
-    print('[+] File has been moved.')
-
-
-def delete_dir(dir_path):
-    print(f'[+] Deleting {dir_path}')
-    requests.delete(
-        f'{name_server_url}/api/v1/dir/',
-        params={"dir_path": dir_path}
-    )
-    print('[+] Directory has been deleted.')
-
-
 def list_files(dir_path):
     response = requests.get(
         f'{name_server_url}/api/v1/ls/',

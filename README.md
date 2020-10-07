@@ -96,6 +96,28 @@ of the outdated file.
 5. Before storage restoration there could be a situation when some files did not have enough copies.
 So, such files have to be found and replicated. The mechanism is the same as replication on file upload.
 
+### Name server restoration
+We have one additional endpoint /restore on the _**name server**_ that is only accessible for superuser.
+The request on that endpoint allows to restore the database of the _**name server**_ by the files 
+on the _**storage servers**_. 
+
+So, let's get through an example and see how it works. We have a situation when the _**name server**_
+lost its database. The _**storage servers**_ have to send /register request on the _**name server**_ 
+to inform it about their ip addresses. So, we have to restart the _**storage servers**_. Once the 
+_**name server**_ knows the ips, superuser can send GET request to /restore and the _**name server**_
+will restore the file tree from servers.
+
+Here is the illustration of restoration process.
+
+![](/images/name_server_restoration.jpg)  
+
+1. _**Name server**_ sends GET request /dump_tree to all the _**storage servers**_. It gets back
+file names and their respected hashes.
+2. _**Name server**_ chooses the files which have the largest number 
+of copies and their hash is the same.
+
+So, in the tree will be file a.txt with hash 123 and file b.txt with hash 321.
+
 ## How to run 
 Here is the instruction of how to start the testing setup.
 
@@ -103,7 +125,7 @@ To start the _**name server**_ run
 ```
 docker-compose up -d --build
 ``` 
-in the name_server directory. To start two storage servers and one client
+in the name_server directory. To start two storage servers and one client,
 run
 ```
 ./test_setup.sh

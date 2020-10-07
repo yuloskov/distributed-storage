@@ -120,7 +120,8 @@ def restore_storages(request):
         best_size = None
         for hash in files[p]:
             size, storage_list = files[p][hash]
-            if len(storage_list) >= settings.NUM_OF_REPLICAS and (best_hash is None or len(storage_list) > len(files[p][best_hash][1])):
+            enough_replicas = len(storage_list) >= settings.NUM_OF_REPLICAS
+            if enough_replicas and (best_hash is None or len(storage_list) > len(files[p][best_hash][1])):
                 best_hash = hash
                 best_size = size
         if best_hash is not None:

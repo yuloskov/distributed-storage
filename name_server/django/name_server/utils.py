@@ -1,33 +1,32 @@
 from django.conf import settings
 from django.db.models import Count, Q
 
+from django_q.tasks import schedule
+
 from .models import (
     File,
     Storage,
 )
 
 import os
+import logging
 import requests
 from datetime import datetime, timedelta
 
-from django_q.tasks import schedule
-
-import logging
 
 logger = logging.getLogger(__name__)
-
 
 STORAGE_SERVER_PORT = os.environ['STORAGE_SERVER_PORT']
 
 
 def replicate_file(f):
-    if f.storage.count() >= settings.NUM_OF_REPLICAS:
+    file_servers = f.storage.filter(status='UP')
+
+    if file_servers.count() >= settings.NUM_OF_REPLICAS:
         logger.info(f'ENOUGH COPIES {f.file_path}')
         return
 
     logger.info(f'REPLICATING {f.file_path}')
-
-    file_servers = f.storage.filter(status='UP')
 
     init_server = file_servers.first()
     copy_to = Storage.objects.filter(status='UP').difference(file_servers).first()
@@ -37,10 +36,10 @@ def replicate_file(f):
 
     try:
         requests.post(
-            f'http://{init_server.ip}:{STORAGE_SERVER_PORT}/replicate',
+            f'http://{init_server.private_ip}:{STORAGE_SERVER_PORT}/replicate',
             data={
                 'file_path': f.file_path,
-                'dest_ip': copy_to.ip
+                'dest_ip': copy_to.private_ip
             }
         )
     except:

@@ -23,9 +23,10 @@ class Command(BaseCommand):
     def health_check(self):
         logs = open(settings.LOGS_PATH, 'a+')
         for s in Storage.objects.all():
+            s_ip = s.private_ip
             try:
                 status = requests.get(
-                    f'http://{s.ip}:{STORAGE_SERVER_PORT}/status',
+                    f'http://{s_ip}:{STORAGE_SERVER_PORT}/status',
                     timeout=3
                 ).text
                 if s.status != 'UP':
@@ -33,14 +34,14 @@ class Command(BaseCommand):
                     s.save()
                     storage_up.send(sender=None, storage=s)
 
-                logs.write(f'{s.ip} : {status}\n')
+                logs.write(f'{s_ip} : {status}\n')
             except:
                 # Remove the server
                 if s.status != 'DN':
                     s.status = 'DN'
                     s.save()
                     storage_down.send(sender=None, storage=s)
-                logs.write(f'{s.ip} : FAIL\n')
+                logs.write(f'{s_ip} : FAIL\n')
 
                 # Send replication signal
 

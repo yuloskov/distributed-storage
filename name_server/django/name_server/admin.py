@@ -5,13 +5,15 @@ from .models import *
 @admin.register(Storage)
 class StorageAdmin(admin.ModelAdmin):
     list_display = (
-        "ip",
+        "private_ip",
+        "public_ip",
         "status",
         "num_of_files",
     )
 
     readonly_fields = (
-        "ip",
+        "private_ip",
+        "public_ip",
         "status",
         "files_",
     )

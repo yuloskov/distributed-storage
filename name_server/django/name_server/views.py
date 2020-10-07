@@ -8,6 +8,7 @@ from .models import (
 )
 from .signals import file_saved
 
+import os
 import random
 import logging
 import requests
@@ -23,13 +24,18 @@ def available(request):
 
     available_server = random.choice(available_servers)
 
-    ip = available_server.ip
-    return JsonResponse({'ip': ip}, status=200)
+    public_ip = available_server.public_ip
+    return JsonResponse({'ip': public_ip}, status=200)
 
 
 def create_storage(request):
-    server_ip = request.META.get('REMOTE_ADDR')
-    Storage.objects.get_or_create(ip=server_ip)
+    private_ip = request.META.get('REMOTE_ADDR')
+    public_ip = os.environ['PUBLIC_IP']
+
+    Storage.objects.get_or_create(
+        public_ip=public_ip,
+        private_ip=private_ip
+    )
     return HttpResponse(status=200)
 
 
@@ -38,9 +44,9 @@ def file_view(request):
         file_path = request.POST.get('file_path')
         file_hash = request.POST.get('file_hash')
         file_size = request.POST.get('file_size')
-        server_ip = request.META.get('REMOTE_ADDR')
+        private_ip = request.META.get('REMOTE_ADDR')
 
-        storage = Storage.objects.get(ip=server_ip)
+        storage = Storage.objects.get(private_ip=private_ip)
         file = File.objects.filter(file_path=file_path).first()
 
         if file is None:
@@ -69,7 +75,7 @@ def file_view(request):
         file = get_object_or_404(File, file_path=file_path)
         servers = file.storage.filter(status='UP')
         for server in servers:
-            url = f'http://{server.ip}:{settings.STORAGE_SERVER_PORT}/file'
+            url = f'http://{server.private_ip}:{settings.STORAGE_SERVER_PORT}/file'
             requests.delete(url, params={'file_path': file_path})
         file.delete()
 
@@ -80,7 +86,7 @@ def file_view(request):
         file = get_object_or_404(File, file_path=file_path)
         storage = random.choice(file.storage.filter(status='UP'))
 
-        return JsonResponse({'ip': storage.ip})
+        return JsonResponse({'ip': storage.public_ip})
 
     return HttpResponse(status=400)
 
@@ -100,7 +106,7 @@ def restore_storages(request):
         return JsonResponse({'message': 'DB not empty'}, status=200)
 
     storage_dumps = [
-        (storage, requests.get(f'http://{storage.ip}:{settings.STORAGE_SERVER_PORT}/dump_tree').json())
+        (storage, requests.get(f'http://{storage.private_ip}:{settings.STORAGE_SERVER_PORT}/dump_tree').json())
         for storage in Storage.objects.all()
     ]
 

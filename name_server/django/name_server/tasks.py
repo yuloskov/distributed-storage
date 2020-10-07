@@ -47,12 +47,14 @@ def sync_on_storage_up(sender, **kwargs):
     if File.objects.count() == 0:
         return
 
-    storage_files = requests.get(f'http://{storage.ip}:{STORAGE_SERVER_PORT}/dump_tree').json()
+    s_ip = storage.private_ip
+
+    storage_files = requests.get(f'http://{s_ip}:{STORAGE_SERVER_PORT}/dump_tree').json()
     logger.info(storage_files)
     for p in storage_files:
         file = File.objects.filter(file_path=p).first()
         if file is None or file.hash != storage_files[p]['hash']:
-            requests.delete(f'http://{storage.ip}:{STORAGE_SERVER_PORT}/file', params={"file_path": p})
+            requests.delete(f'http://{s_ip}:{STORAGE_SERVER_PORT}/file', params={"file_path": p})
     replicate_all()
 
 
@@ -60,9 +62,10 @@ def sync_on_storage_up(sender, **kwargs):
 def file_replication_check(file_pk, storage_pk):
     file = File.objects.get(pk=int(file_pk))
     storage = Storage.objects.get(pk=int(storage_pk))
+
     # Successful replication
     if file.storage.filter(pk=storage.pk).exists():
-        logger.info(f'Succ repl check {file.file_path} {storage.ip}')
+        logger.info(f'Succ repl check {file.file_path} {storage.private_ip}')
     # Something went wrong
     # Try to replicate again
     else:

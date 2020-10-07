@@ -88,8 +88,10 @@ def main(args):
                     local_files[p]['status'] = 'new'
                 elif local_files[p]['hash'] != server_files[p]['hash']:
                     local_files[p]['status'] = 'updated'
+                    local_files[p]['modified'] = server_files[p]['modified']
                 else:
                     local_files[p]['status'] = 'unchanged'
+                    local_files[p]['modified'] = server_files[p]['modified']
             for p in server_files:
                 if p not in local_files:
                     local_files[p] = server_files[p]

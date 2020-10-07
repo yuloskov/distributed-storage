@@ -25,3 +25,5 @@ function push() {
 function pull() {
   python3 /application/client.py pull $@
 }
+
+# init dfs --force

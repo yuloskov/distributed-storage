@@ -132,7 +132,7 @@ def main(args, is_cli=True):
             os.mkdir(args.dir)
         else:
             raise NotImplementedError()
-        with open('.dfsroot', 'w') as file:
+        with open('/tmp/.dfsroot', 'w') as file:
             root = os.path.abspath(args.dir)
             file.write(root)
 
@@ -141,7 +141,7 @@ def main(args, is_cli=True):
             repl()
     else:
         if root == '':
-            root = open('.dfsroot', 'r').readline()
+            root = open('/tmp/.dfsroot', 'r').readline()
         if is_cli:
             os.chdir(root)
 
@@ -218,7 +218,7 @@ def main(args, is_cli=True):
             for path in args.path:
                 abs_path = full_path(path)
                 rel_path = abs_path[len(root) + 1:]
-                print(f'Uploading {path}...')
+                print(f'Uploading {path} ...')
 
                 server_files = list_files(rel_path)
                 local_files = list_local_files(rel_path, abs_path)

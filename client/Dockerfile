@@ -9,5 +9,8 @@ RUN pip3 install -r requirements.txt
 COPY ./api.py .
 COPY ./client.py .
 
-ENTRYPOINT ["python3", "-u", "client.py"]
-CMD ["init", "./dfs", "-f", "-r"]
+COPY ./cli.sh /root/.bashrc
+
+#ENTRYPOINT ["python3", "-u", "client.py"]
+#CMD ["init", "./dfs", "-f", "-r"]
+ENTRYPOINT ["/bin/bash"]

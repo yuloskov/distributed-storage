@@ -90,3 +90,40 @@ def list_files(request):
     res = {file.file_path: {'hash': file.hash, 'file_size': file.size, 'modified': file.last_modified}
            for file in File.objects.filter(file_path__startswith=path)}
     return JsonResponse(res, status=200)
+
+
+def restore_storages(request):
+    if not request.user.is_superuser:
+        return HttpResponse(status=403)
+
+    if File.objects.count() > 0:
+        return JsonResponse({'message': 'DB not empty'}, status=200)
+
+    storage_dumps = [
+        (storage, requests.get(f'http://{storage.ip}:{settings.STORAGE_SERVER_PORT}/dump_tree').json())
+        for storage in Storage.objects.all()
+    ]
+
+    files = {}
+    for storage, storage_files in storage_dumps:
+        for p in storage_files:
+            file = storage_files[p]
+            if p not in files:
+                files[p] = {}
+            hash = file['hash']
+            if hash not in files[p]:
+                files[p][hash] = (file['size'], [])
+            files[p][hash][1].append(storage)
+
+    for p in files:
+        best_hash = None
+        best_size = None
+        for hash in files[p]:
+            size, storage_list = files[p][hash]
+            if len(storage_list) >= settings.NUM_OF_REPLICAS and (best_hash is None or len(storage_list) > len(files[p][best_hash][1])):
+                best_hash = hash
+                best_size = size
+        if best_hash is not None:
+            file = File.objects.create(file_path=p, hash=best_hash, size=best_size)
+            file.storage.set(files[p][best_hash][1])
+    return JsonResponse({'message': 'OK', 'num_files': File.objects.count()}, status=200)

@@ -94,7 +94,8 @@ def list_files():
             path = os.path.join(dir_path, file_name)
             sub_path = path[len(save_folder):]
             res[sub_path] = {
-                "hash": md5(path)
+                "hash": md5(path),
+                "size": round(os.path.getsize(path)/(1024*1024), 2)
             }
     return res
 

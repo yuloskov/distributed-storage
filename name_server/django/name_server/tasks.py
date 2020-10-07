@@ -44,6 +44,9 @@ def replicate_on_storage_down(sender, **kwargs):
 def sync_on_storage_up(sender, **kwargs):
     storage = kwargs['storage']
 
+    if File.objects.count() == 0:
+        return
+
     storage_files = requests.get(f'http://{storage.ip}:{STORAGE_SERVER_PORT}/dump_tree').json()
     logger.info(storage_files)
     for p in storage_files:

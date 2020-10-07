@@ -12,7 +12,8 @@ api = [
     path('storage/available/', available),
     path('storage/', create_storage),
     path('file/', file_view),
-    path('ls/', list_files)
+    path('ls/', list_files),
+    path('restore/', restore_storages)
 ]
 
 urlpatterns = [

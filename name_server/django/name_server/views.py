@@ -30,7 +30,7 @@ def available(request):
 
 def create_storage(request):
     public_ip = request.POST.get('public_ip')
-    private_ip = request.META.get('REMOTE_ADDR')
+    private_ip = request.POST.get('private_ip')
 
     Storage.objects.get_or_create(
         public_ip=public_ip,
@@ -44,7 +44,7 @@ def file_view(request):
         file_path = request.POST.get('file_path')
         file_hash = request.POST.get('file_hash')
         file_size = request.POST.get('file_size')
-        private_ip = request.META.get('REMOTE_ADDR')
+        private_ip = request.POST.get('private_ip')
 
         storage = Storage.objects.get(private_ip=private_ip)
         file = File.objects.filter(file_path=file_path).first()

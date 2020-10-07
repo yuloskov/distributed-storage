@@ -6,6 +6,9 @@ cd /application
 
 sleep 5
 echo "Register storage"
+
+export PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+export PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 python3 -u register.py > register.log
 
 echo "Start gunicorn"

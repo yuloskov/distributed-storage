@@ -23,7 +23,7 @@ class Storage(models.Model):
     )
 
     def __str__(self):
-        return self.ip
+        return self.public_ip
 
 
 class File(models.Model):

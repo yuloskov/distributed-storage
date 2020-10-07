@@ -10,6 +10,7 @@ app = Flask(__name__)
 name_server_ip = os.environ['NAME_SERVER_IP']
 name_server_port = os.environ['NAME_SERVER_PORT']
 storage_server_port = os.environ['STORAGE_SERVER_PORT']
+private_ip = os.environ['PRIVATE_IP']
 name_server_url = f'http://{name_server_ip}:{name_server_port}'
 file_url = f'{name_server_url}/api/v1/file/'
 
@@ -116,7 +117,7 @@ def send_data_to_server(save_path, file_path, ip):
 def save_file_to_db(file_path, file_hash, file_size):
     response = requests.post(
         file_url,
-        data={'file_path': file_path, 'file_hash': file_hash, 'file_size': file_size},
+        data={'file_path': file_path, 'file_hash': file_hash, 'file_size': file_size, 'private_ip': private_ip},
     )
     print(response.status_code)
 

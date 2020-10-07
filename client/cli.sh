@@ -1,11 +1,17 @@
 #!/bin/bash
 
+function help() {
+  python3 /application/client.py --help
+}
+
 function init() {
   python3 /application/client.py init $@
-  DIR="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
-  cd "$DIR"
-  echo "PS1='"'${PWD#'"$DIR""}/ \$ '" >> /root/.bash_profile
-  source /root/.bash_profile
+  if [ $? == 0 ]; then
+    DIR="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
+    cd "$DIR"
+    echo "PS1='"'${PWD#'"$DIR""}/ \$ '" >> /root/.bash_profile
+    source /root/.bash_profile
+  fi
 }
 
 function ls() {
@@ -18,12 +24,4 @@ function push() {
 
 function pull() {
   python3 /application/client.py pull $@
-}
-
-function import() {
-  python3 /application/client.py import $@
-}
-
-function export() {
-  python3 /application/client.py export $@
 }

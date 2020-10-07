@@ -29,8 +29,8 @@ def available(request):
 
 
 def create_storage(request):
+    public_ip = request.POST.get('public_ip')
     private_ip = request.META.get('REMOTE_ADDR')
-    public_ip = os.environ['PUBLIC_IP']
 
     Storage.objects.get_or_create(
         public_ip=public_ip,
